@@ -2,76 +2,81 @@ import 'package:flutter/material.dart';
 import 'package:flutter_wallet_ui_challenge/src/data/data.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/account.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/card8a.dart';
+import 'package:flutter_wallet_ui_challenge/src/models/customer.dart';
+import 'package:flutter_wallet_ui_challenge/src/models/transfer_account.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/user_model.dart';
-import 'package:flutter_wallet_ui_challenge/src/utils/screen_size.dart';
-import 'package:flutter_wallet_ui_challenge/src/widgets/percent_indicator.dart';
 import 'package:http/http.dart' as http;
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'dart:convert' as convert;
 import 'package:toast/toast.dart';
 
+import 'home_page.dart';
+
 class Transfer extends StatefulWidget {
   UserModel user;
   int userId;
+  Customer customer;
 
-  Transfer(this.user, this.userId);
+  Transfer(this.user, this.userId, this.customer);
 
   @override
-  TransferState createState() => TransferState(this.user, this.userId);
+  TransferState createState() => TransferState();
 }
 
 class TransferState extends State<Transfer> {
-  UserModel user;
-  int userId;
   bool _saving = false;
-  var _currentIndex;
-  List<String> fromAccounts = List();
-  List<String> toAccounts = List();
+  List<TransferAccount> fromAccounts = List();
+  List<TransferAccount> toAccounts = List();
   int selectedRadioFrom;
   int selectedRadioTo;
-  String selectedFromAccount;
-  String selectedToAccount;
+  TransferAccount selectedFromAccount;
+  TransferAccount selectedToAccount;
   final textFieldController = TextEditingController();
+  final textDescriptionController = TextEditingController();
 
-  TransferState(this.user, this.userId);
+  TransferState();
 
   @override
   void initState() {
     super.initState();
     selectedRadioFrom = 0;
     selectedRadioTo = 0;
-    selectedFromAccount = "";
-    selectedToAccount = "";
+    selectedFromAccount = TransferAccount(number: "", brand: "");
+    selectedToAccount = TransferAccount(number: "", brand: "");
+    textDescriptionController.text = "";
 
-    getAccount(userId).then((listAcc) {
+    getAccount(widget.userId).then((listAcc) {
       for (Account acc in listAcc) {
         setState(() {
-          fromAccounts.add(acc.number);
+          fromAccounts
+              .add(TransferAccount(number: acc.number, brand: acc.alias));
         });
       }
       print(fromAccounts);
     });
-    queryCards(userId).then((listCards) {
+    queryCards(widget.userId).then((listCards) {
       for (Card8A card in listCards) {
         setState(() {
-          fromAccounts.add(card.number);
+          fromAccounts
+              .add(TransferAccount(number: card.number, brand: card.brand));
         });
       }
       print(fromAccounts);
     });
 
-    getAccount(user.userId).then((listAcc) {
+    getAccount(widget.user.userId).then((listAcc) {
       for (Account acc in listAcc) {
         setState(() {
-          toAccounts.add(acc.number);
+          toAccounts.add(TransferAccount(number: acc.number, brand: acc.alias));
         });
       }
       print(toAccounts);
     });
-    queryCards(user.userId).then((listCards) {
+    queryCards(widget.user.userId).then((listCards) {
       for (Card8A card in listCards) {
         setState(() {
-          toAccounts.add(card.number);
+          toAccounts
+              .add(TransferAccount(number: card.number, brand: card.brand));
         });
       }
       print(toAccounts);
@@ -81,6 +86,7 @@ class TransferState extends State<Transfer> {
   @override
   void dispose() {
     textFieldController.dispose();
+    textDescriptionController.dispose();
     fromAccounts = List();
     toAccounts = List();
     super.dispose();
@@ -128,7 +134,7 @@ class TransferState extends State<Transfer> {
             ],
           ),
           Text(
-            user.name,
+            widget.user.name,
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -148,7 +154,7 @@ class TransferState extends State<Transfer> {
               letterSpacing: 0.4,
             ),
           ),
-          listAccountsCards(userId, true),
+          listAccountsCards(widget.userId, true),
           SizedBox(
             height: 25,
           ),
@@ -161,14 +167,27 @@ class TransferState extends State<Transfer> {
               letterSpacing: 0.4,
             ),
           ),
-          listAccountsCards(userId, false),
+          listAccountsCards(widget.userId, false),
+          TextField(
+              controller: textDescriptionController,
+              decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Descripción',
+                  icon: Icon(Icons.description)),
+              style: TextStyle(
+                color: Colors.blue,
+                fontWeight: FontWeight.w100,
+                fontSize: 12.0,
+                height: 2.0,
+              ),
+              cursorColor: Colors.red),
           Container(
               margin: const EdgeInsets.only(right: 40, left: 100),
               child: TextField(
                   controller: textFieldController,
                   decoration: InputDecoration(
                       border: InputBorder.none,
-                      hintText: 'monto',
+                      hintText: '\$',
                       icon: Icon(Icons.attach_money)),
                   keyboardType: TextInputType.number,
                   style: TextStyle(
@@ -180,27 +199,28 @@ class TransferState extends State<Transfer> {
                   cursorColor: Colors.red,
                   textInputAction: TextInputAction.send,
                   onSubmitted: (monto) {
-                    tranferir(monto, user, userId, context);
+                    tranferir(monto, widget.user, widget.userId, context,
+                        widget.customer, textDescriptionController.text);
                   })),
         ],
       ),
     );
   }
 
-  Future tranferir(
-      String monto, UserModel user, int userId, BuildContext context) async {
+  Future tranferir(String monto, UserModel user, int userId,
+      BuildContext context, Customer customer, String description) async {
     setState(() {
       _saving = true;
     });
 
-    String fromAccount = selectedFromAccount;
-    String toAccount = selectedToAccount;
+    TransferAccount fromAccount = selectedFromAccount;
+    TransferAccount toAccount = selectedToAccount;
 
-    if (fromAccount.length > 0 && toAccount.length > 0) {
+    if (fromAccount.number.length > 0 && toAccount.number.length > 0) {
       var client = new http.Client();
       try {
         Map<String, String> headers = {"Content-type": "application/json"};
-        String jsonBody = getJson(fromAccount, toAccount, monto);
+        String jsonBody = getJson(fromAccount.number, toAccount.number, monto, description);
         print(jsonBody);
         http.Response response = await client.post(
             'https://kvillacreses-eval-prod.apigee.net/pagos/transfers',
@@ -211,9 +231,9 @@ class TransferState extends State<Transfer> {
           print(body);
           int res = body['response']['code'];
           if (res == 0) {
-            Toast.show("TRansferencia Enviada Exitosamente", context,
-                duration: Toast.LENGTH_SHORT, gravity: Toast.CENTER);
-            textFieldController.text = "";
+            Navigator.pop(context, "transfer");
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => HomePage(customer)));
           } else {
             Toast.show("Error Enviando Transferencia", context,
                 duration: Toast.LENGTH_LONG, gravity: Toast.CENTER);
@@ -236,7 +256,8 @@ class TransferState extends State<Transfer> {
     }
   }
 
-  String getJson(String fromAccount, String toAccount, String monto) {
+  String getJson(
+      String fromAccount, String toAccount, String monto, String description) {
     String fromType = getType(fromAccount);
     String toType = getType(toAccount);
     String jsonBody = '''
@@ -245,7 +266,8 @@ class TransferState extends State<Transfer> {
         "target": "$toAccount",
         "target_type": "$toType",
         "amount": "$monto",
-        "type": "FOUNDS_TRANSFER"
+        "type": "FOUNDS_TRANSFER",
+        "description":"$description"
         }''';
     return jsonBody;
   }
@@ -269,14 +291,14 @@ class TransferState extends State<Transfer> {
         mainAxisAlignment: MainAxisAlignment.start, children: widgetsToLoad);
   }
 
-  List<Widget> radioAccountsFrom(List<String> accounts) {
+  List<Widget> radioAccountsFrom(List<TransferAccount> accounts) {
     List<Widget> widgets = [];
-    for (String acc in accounts) {
+    for (TransferAccount acc in accounts) {
       widgets.add(RadioListTile(
         value: acc,
         groupValue: selectedFromAccount,
-        title: Text(acc),
-        //subtitle: Text(acc),
+        title: Text(acc.number),
+        subtitle: Text(acc.brand),
         onChanged: (val) {
           print("Radio $val");
           setSelectedRadioFrom(val);
@@ -288,14 +310,14 @@ class TransferState extends State<Transfer> {
     return widgets;
   }
 
-  List<Widget> radioAccountsTo(List<String> accounts) {
+  List<Widget> radioAccountsTo(List<TransferAccount> accounts) {
     List<Widget> widgets = [];
-    for (String acc in accounts) {
+    for (TransferAccount acc in accounts) {
       widgets.add(RadioListTile(
         value: acc,
         groupValue: selectedToAccount,
-        title: Text(acc),
-        //subtitle: Text(acc),
+        title: Text(acc.number),
+        subtitle: Text(acc.brand),
         onChanged: (val) {
           print("Radio $val");
           setSelectedRadioTo(val);
@@ -307,13 +329,13 @@ class TransferState extends State<Transfer> {
     return widgets;
   }
 
-  setSelectedRadioFrom(String val) {
+  setSelectedRadioFrom(TransferAccount val) {
     setState(() {
       selectedFromAccount = val;
     });
   }
 
-  setSelectedRadioTo(String val) {
+  setSelectedRadioTo(TransferAccount val) {
     setState(() {
       selectedToAccount = val;
     });

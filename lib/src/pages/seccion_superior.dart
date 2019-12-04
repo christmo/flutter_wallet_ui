@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_wallet_ui_challenge/src/data/data.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/card8a.dart';
+import 'package:flutter_wallet_ui_challenge/src/models/customer.dart';
 import 'package:flutter_wallet_ui_challenge/src/utils/screen_size.dart';
 import 'package:flutter_wallet_ui_challenge/src/widgets/add_button.dart';
 import 'package:flutter_wallet_ui_challenge/src/widgets/credit_card.dart';
@@ -11,15 +12,16 @@ import 'package:flutter_wallet_ui_challenge/src/widgets/user_card.dart';
 
 import 'overview_page.dart';
 
-Widget superior(Size media, BuildContext context, int userId) {
+Widget superior(
+    Size media, BuildContext context, int userId, Customer customer) {
   return Container(
     color: Colors.grey.shade50,
     height: media.height / 2,
     child: Stack(
       children: <Widget>[
         fondoSuperior(media),
-        ListCards(media: media),
-        tituloBotonesSuperiores(media, context)
+        ListCards(media: media, userId: userId),
+        tituloBotonesSuperiores(media, context, customer),
       ],
     ),
   );
@@ -27,8 +29,9 @@ Widget superior(Size media, BuildContext context, int userId) {
 
 class ListCards extends StatefulWidget {
   final Size media;
+  final int userId;
 
-  const ListCards({Key key, this.media}) : super(key: key);
+  const ListCards({Key key, this.media, this.userId}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -43,60 +46,32 @@ class _ListCardsState extends State<ListCards> {
   void initState() {
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
     return tarjetas(widget.media);
   }
 
   Widget tarjetas(Size media) {
-    FutureBuilder<List<Card8A>>(
-        future: queryCards(4),
-        builder: (context, snapshot){
-          if(snapshot.hasData){
-            cards = snapshot.data;
-            print("Exito "+ cards[0].number);
-          }
-          print("Salio Exito");
-        }
-    );
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(
         margin: EdgeInsets.only(
           left: 20,
         ),
-        height: media.longestSide <= 775 ? media.height / 4 : media.height / 4.3,
+        height:
+            media.longestSide <= 775 ? media.height / 4 : media.height / 4.3,
         width: media.width,
         child: NotificationListener<OverscrollIndicatorNotification>(
           onNotification: (overscroll) {
             overscroll.disallowGlow();
           },
-          child: ListView.builder(
-            physics: BouncingScrollPhysics(),
-            padding: EdgeInsets.only(bottom: 10),
-            shrinkWrap: true,
-            scrollDirection: Axis.horizontal,
-            itemCount: getCreditCards().length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: EdgeInsets.only(right: 10),
-                child: GestureDetector(
-                  onTap: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => OverviewPage())),
-                  child: CreditCardDC(
-                    card: getCreditCards()[index],
-                  ),
-                ),
-              );
-            },
-          ),
+          child: CardDCWidget(widget.userId),
         ),
       ),
     );
   }
 }
-
-
 
 Widget fondoSuperior(Size media) {
   return Column(
@@ -133,7 +108,7 @@ Widget fondoSuperior(Size media) {
   );
 }
 
-Widget tituloBotonesSuperiores(Size _media, BuildContext context) {
+Widget tituloBotonesSuperiores(Size _media, BuildContext context, Customer customer) {
   return Positioned(
       top: _media.longestSide <= 775
           ? screenAwareSize(20, context)
@@ -191,6 +166,16 @@ Widget tituloBotonesSuperiores(Size _media, BuildContext context) {
                 onPressed: () => print("add"),
               )
             ],
+          ),
+          Text(
+            "Hola " + customer.name,
+            style: TextStyle(
+                inherit: true,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.white),
+            overflow: TextOverflow.visible,
+            textAlign: TextAlign.center,
           ),
         ],
       ));

@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/account.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/credit_card_model.dart';
+import 'package:flutter_wallet_ui_challenge/src/models/customer.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/payment_model.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/user_model.dart';
 import 'package:http/http.dart' as http;
@@ -16,20 +17,22 @@ List<CreditCardModel> getCreditCards() {
       "4616900007729988",
       "https://resources.mynewsdesk.com/image/upload/ojf8ed4taaxccncp6pcp.png",
       "06/23",
-      "192"));
+      "192", false));
   creditCards.add(CreditCardModel(
       "3015788947523652",
       "https://resources.mynewsdesk.com/image/upload/ojf8ed4taaxccncp6pcp.png",
       "04/25",
-      "217"));
+      "217", false));
   return creditCards;
 }
 
 List<UserModel> getUsersCard() {
   List<UserModel> userCards = [
-    UserModel("Adrian", "assets/images/users/adrian.jpeg", 5),
-    UserModel("Karla", "assets/images/users/karla.jpeg", 1),
+    UserModel("Adrian", "assets/images/users/adrian.jpeg", 1),
+    UserModel("Karla", "assets/images/users/karla.jpeg", 3),
     UserModel("Xavi", "assets/images/users/xavi.jpeg", 2),
+    UserModel("Christian", "assets/images/users/chris.jpeg", 4),
+    UserModel("Ivan", "assets/images/users/ivan.jpeg", 5),
   ];
 
   return userCards;
@@ -93,4 +96,20 @@ Future<List<Account>> getAccount(int userId) async {
   }
 
   return accounts;
+}
+
+Future<List<Customer>> getCustomers() async {
+  List<Customer> customers = new List();
+  var client = new http.Client();
+  http.Response response = await client.get(
+      'https://kvillacreses-eval-prod.apigee.net/clientes/customers');
+  if (response.statusCode == 200) {
+    Map<String, dynamic> body = convert.jsonDecode(response.body);
+    List<dynamic> res = body['response']['message'];
+    customers = res.map((dynamic item) => Customer.fromJson(item)).toList();
+  } else {
+    throw "Error consultando los clientes";
+  }
+
+  return customers;
 }

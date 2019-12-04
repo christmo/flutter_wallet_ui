@@ -20,6 +20,22 @@ class _ProductsListWidgetState extends State<ProductsListWidget> {
   @override
   void initState() {
     super.initState();
+    loadData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    //loadData();
+    super.didChangeDependencies();
+  }
+
+  @override
+  void dispose(){
+    products = List();
+    super.dispose();
+  }
+
+  void loadData() {
     getAccount(widget.userId).then((listAcc) {
       for (Account acc in listAcc) {
         setState(() {
@@ -41,7 +57,7 @@ class _ProductsListWidgetState extends State<ProductsListWidget> {
               Icons.credit_card,
               Color(0xFF000080),
               card.brand,
-              card.number,
+              card.number.replaceAll("-", ""),
               "",
               double.parse(card.available_quota),
               1));

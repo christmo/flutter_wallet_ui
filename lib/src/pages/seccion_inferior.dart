@@ -1,16 +1,20 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_wallet_ui_challenge/src/data/data.dart';
+import 'package:flutter_wallet_ui_challenge/src/models/customer.dart';
+import 'package:flutter_wallet_ui_challenge/src/models/user_model.dart';
 import 'package:flutter_wallet_ui_challenge/src/pages/transfer.dart';
 import 'package:flutter_wallet_ui_challenge/src/utils/screen_size.dart';
 import 'package:flutter_wallet_ui_challenge/src/widgets/add_button.dart';
 import 'package:flutter_wallet_ui_challenge/src/widgets/payment_card.dart';
 import 'package:flutter_wallet_ui_challenge/src/widgets/products.dart';
 import 'package:flutter_wallet_ui_challenge/src/widgets/user_card.dart';
+import 'package:toast/toast.dart';
 
 import 'overview_page.dart';
 
-Widget inferior(Size _media, BuildContext context, int userId) {
+Widget inferior(
+    Size _media, BuildContext context, int userId, Customer customer) {
   return Container(
     color: Colors.grey.shade50,
     width: _media.width,
@@ -43,34 +47,10 @@ Widget inferior(Size _media, BuildContext context, int userId) {
           height:
               screenAwareSize(_media.longestSide <= 775 ? 110 : 80, context),
           child: NotificationListener<OverscrollIndicatorNotification>(
-            onNotification: (overscroll) {
-              overscroll.disallowGlow();
-            },
-            child: ListView.builder(
-              physics: BouncingScrollPhysics(),
-              scrollDirection: Axis.horizontal,
-              itemCount: getUsersCard().length + 1,
-              itemBuilder: (BuildContext context, int index) {
-                if (index == 0) {
-                  return Padding(
-                      padding: EdgeInsets.only(right: 10), child: AddButton());
-                }
-
-                return Padding(
-                  padding: EdgeInsets.only(right: 20),
-                  child: GestureDetector(
-                    onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => Transfer(getUsersCard()[index - 1], userId))),
-                    child: UserCardWidget(
-                      user: getUsersCard()[index - 1],
-                    ),
-                  ),
-                );
+              onNotification: (overscroll) {
+                overscroll.disallowGlow();
               },
-            ),
-          ),
+              child: loadTransferFriends(customer)),
         ),
         Padding(
           padding:
@@ -89,7 +69,7 @@ Widget inferior(Size _media, BuildContext context, int userId) {
                 width: 20,
               ),
               Text(
-                "Recivido",
+                "Recibido",
                 style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
@@ -122,27 +102,50 @@ Widget inferior(Size _media, BuildContext context, int userId) {
                 overscroll.disallowGlow();
               },
               child: ProductsListWidget(userId),
-              /*child: ListView.separated(
-                physics: ClampingScrollPhysics(),
-                shrinkWrap: true,
-                separatorBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.only(left: 85.0),
-                    child: Divider(),
-                  );
-                },
-                padding: EdgeInsets.zero,
-                itemCount: getPaymentsCard().length,
-                itemBuilder: (BuildContext context, int index) {
-                  return PaymentCardWidget(
-                    payment: getPaymentsCard()[index],
-                  );
-                },
-              ),*/
             ),
           ],
         ),
       ],
     ),
   );
+}
+
+Widget loadTransferFriends(Customer customer) {
+  List<UserModel> friends = getUsersCard();
+  //friends =
+  //    friends.where((friend) => friend.code != int.parse(customer.id)).toList();
+  return ListView.builder(
+    physics: BouncingScrollPhysics(),
+    scrollDirection: Axis.horizontal,
+    itemCount: friends.length + 1,
+    itemBuilder: (BuildContext context, int index) {
+      if (index == 0) {
+        return Padding(padding: EdgeInsets.only(right: 10), child: AddButton());
+      }
+      return Padding(
+        padding: EdgeInsets.only(right: 20),
+        child: GestureDetector(
+          onTap: () {
+            openTransfer(context, index, customer);
+          },
+          child: UserCardWidget(
+            user: friends[index - 1],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+void openTransfer(BuildContext context, int index, Customer customer) async {
+  int userId = int.parse(customer.id);
+  String result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) =>
+              Transfer(getUsersCard()[index - 1], userId, customer)));
+  if (result != null && result.length > 0) {
+    Toast.show("Transferencia Enviada Exitosamente", context,
+        duration: Toast.LENGTH_SHORT, gravity: Toast.CENTER);
+  }
 }
