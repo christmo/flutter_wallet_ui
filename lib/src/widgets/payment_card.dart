@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/payment_model.dart';
 
 class PaymentCardWidget extends StatefulWidget {
-  final PaymentModel payment;
+  final ProductModel payment;
 
   const PaymentCardWidget({Key key, this.payment}) : super(key: key);
 
@@ -22,7 +22,7 @@ class _PaymentCardWidgetState extends State<PaymentCardWidget> {
       child: ListTile(
         dense: true,
         trailing: Text(
-          "${widget.payment.type > 0 ? "+" : "-"} \$ ${widget.payment.amount}",
+          "${widget.payment.paymentType > 0 ? "+" : "-"} \$ ${widget.payment.amount}",
           style: TextStyle(
               inherit: true, fontWeight: FontWeight.w700, fontSize: 16.0),
         ),
@@ -64,13 +64,13 @@ class _PaymentCardWidgetState extends State<PaymentCardWidget> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text(widget.payment.date,
+              Text(widget.payment.number,
                   style: TextStyle(
                       inherit: true, fontSize: 12.0, color: Colors.black45)),
               SizedBox(
                 width: 20,
               ),
-              Text(widget.payment.hour,
+              Text(widget.payment.type,
                   style: TextStyle(
                       inherit: true, fontSize: 12.0, color: Colors.black45)),
               Spacer(),

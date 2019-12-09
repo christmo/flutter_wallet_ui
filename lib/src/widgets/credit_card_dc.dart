@@ -11,7 +11,9 @@ class CreditCardDC extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _media = MediaQuery.of(context).size;
+    final _media = MediaQuery
+        .of(context)
+        .size;
     return Material(
       elevation: 1,
       shadowColor: Colors.grey.shade300,
@@ -40,10 +42,14 @@ class CreditCardDC extends StatelessWidget {
                 ),
                 Text(
                   card.cardNo,
-                  style: Theme.of(context).textTheme.headline.copyWith(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme
+                      .of(context)
+                      .textTheme
+                      .headline
+                      .copyWith(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 SizedBox(height: 20),
                 Row(
@@ -61,49 +67,23 @@ class CreditCardDC extends StatelessWidget {
                       width: 10,
                     ),
                     Text(card.expiryDate,
-                        style: Theme.of(context).textTheme.headline.copyWith(
-                              color: Colors.black.withOpacity(0.5),
-                              fontWeight: FontWeight.bold,
-                            ))
+                        style: Theme
+                            .of(context)
+                            .textTheme
+                            .headline
+                            .copyWith(
+                          color: Colors.black.withOpacity(0.5),
+                          fontWeight: FontWeight.bold,
+                        ))
                   ],
                 )
               ],
             ),
           ),
-          loadCardImage(card.logo),
+          loadCardImage(card.type, card.logo, 15),
         ],
       ),
     );
-  }
-
-  Widget loadCardImage(String logo) {
-    if(card.type){
-      return Positioned(
-        top: 15,
-        right: 15,
-        child: Container(
-          height: 25,
-          width: 50,
-          child: Image.asset('assets/images/dc-logo.png'),
-        ),
-      );
-    } else {
-      return Positioned(
-        top: 15,
-        right: 15,
-        child: Container(
-          height: 25,
-          width: 50,
-          color: Colors.pink,
-          padding: EdgeInsets.all(7),
-          child: Image.network(
-            card.logo,
-            width: 50,
-            color: Colors.white,
-          ),
-        ),
-      );
-    }
   }
 }
 
@@ -126,7 +106,7 @@ class _CardDCWidgetState extends State<CardDCWidget> {
       for (Card8A card in listCards) {
         setState(() {
           cards.add(CreditCardModel(
-              card.number, getLogo(card), "06/23", "192", getType(card)));
+              card.number, getLogo(card.brand), "06/23", "192", getType(card)));
         });
       }
     });
@@ -159,13 +139,6 @@ class _CardDCWidgetState extends State<CardDCWidget> {
         );
       },
     );
-  }
-
-  String getLogo(Card8A card) {
-    if (card.brand.contains("Visa")) {
-      return "https://resources.mynewsdesk.com/image/upload/ojf8ed4taaxccncp6pcp.png";
-    }
-    return "https://kvillacreses-eval-diners.apigee.io/files/dc-logo.png";
   }
 
   bool getType(Card8A card) {

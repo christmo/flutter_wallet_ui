@@ -49,19 +49,20 @@ class _ListCardsState extends State<ListCards> {
 
   @override
   Widget build(BuildContext context) {
-    return tarjetas(widget.media);
+    return tarjetas();
   }
 
-  Widget tarjetas(Size media) {
+  Widget tarjetas() {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(
         margin: EdgeInsets.only(
           left: 20,
         ),
-        height:
-            media.longestSide <= 775 ? media.height / 4 : media.height / 4.3,
-        width: media.width,
+        height: widget.media.longestSide <= 775
+            ? widget.media.height / 4
+            : widget.media.height / 4.3,
+        width: widget.media.width,
         child: NotificationListener<OverscrollIndicatorNotification>(
           onNotification: (overscroll) {
             overscroll.disallowGlow();
@@ -108,7 +109,8 @@ Widget fondoSuperior(Size media) {
   );
 }
 
-Widget tituloBotonesSuperiores(Size _media, BuildContext context, Customer customer) {
+Widget tituloBotonesSuperiores(
+    Size _media, BuildContext context, Customer customer) {
   return Positioned(
       top: _media.longestSide <= 775
           ? screenAwareSize(20, context)

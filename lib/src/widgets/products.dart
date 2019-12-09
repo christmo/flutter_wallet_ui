@@ -3,6 +3,7 @@ import 'package:flutter_wallet_ui_challenge/src/models/account.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/card8a.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/payment_model.dart';
 import 'package:flutter_wallet_ui_challenge/src/data/data.dart';
+import 'package:flutter_wallet_ui_challenge/src/pages/movements.dart';
 import 'package:flutter_wallet_ui_challenge/src/widgets/payment_card.dart';
 
 class ProductsListWidget extends StatefulWidget {
@@ -15,7 +16,7 @@ class ProductsListWidget extends StatefulWidget {
 }
 
 class _ProductsListWidgetState extends State<ProductsListWidget> {
-  List<PaymentModel> products = List();
+  List<ProductModel> products = List();
 
   @override
   void initState() {
@@ -30,7 +31,7 @@ class _ProductsListWidgetState extends State<ProductsListWidget> {
   }
 
   @override
-  void dispose(){
+  void dispose() {
     products = List();
     super.dispose();
   }
@@ -39,28 +40,34 @@ class _ProductsListWidgetState extends State<ProductsListWidget> {
     getAccount(widget.userId).then((listAcc) {
       for (Account acc in listAcc) {
         setState(() {
-          products.add(PaymentModel(
+          products.add(ProductModel(
               Icons.monetization_on,
               Color(0xFFffd60f),
               acc.alias + " - " + acc.obfuscated,
               acc.number,
               acc.type,
               double.parse(acc.available_balance),
-              1));
+              1,
+              acc.alias,
+              acc.obfuscated,
+              ""));
         });
       }
     });
     queryCards(widget.userId).then((listCards) {
       for (Card8A card in listCards) {
         setState(() {
-          products.add(PaymentModel(
+          products.add(ProductModel(
               Icons.credit_card,
-              Color(0xFF000080),
+              getBrandColor(card.brand),
+              card.brand,
+              card.number,
+              "creditcard",
+              double.parse(card.available_quota),
+              1,
               card.brand,
               card.number.replaceAll("-", ""),
-              "",
-              double.parse(card.available_quota),
-              1));
+              card.next_payment_day));
         });
       }
     });
@@ -69,29 +76,32 @@ class _ProductsListWidgetState extends State<ProductsListWidget> {
   @override
   Widget build(BuildContext context) {
     Widget list = ListView.separated(
-      physics: ClampingScrollPhysics(),
-      shrinkWrap: true,
-      separatorBuilder: (context, index) {
-        return Padding(
-          padding: const EdgeInsets.only(left: 85.0),
-          child: Divider(),
-        );
-      },
-      padding: EdgeInsets.zero,
-      itemCount: products.length,
-      itemBuilder: (BuildContext context, int index) {
-        return getRow(products[index]);
-      },
-    );
+        physics: ClampingScrollPhysics(),
+        shrinkWrap: true,
+        separatorBuilder: (context, index) {
+          return Padding(
+            padding: const EdgeInsets.only(left: 85.0),
+            child: Divider(),
+          );
+        },
+        padding: EdgeInsets.zero,
+        itemCount: products.length,
+        itemBuilder: (BuildContext context, int index) {
+          return GestureDetector(
+              onTap: () {
+                goToMovementsPage(index);
+              },
+              child: getRow(products[index]));
+        });
     return list;
   }
 
-  Container getRow(PaymentModel payment) {
+  Container getRow(ProductModel payment) {
     return Container(
       child: ListTile(
         dense: true,
         trailing: Text(
-          "${payment.type > 0 ? "+" : "-"} \$ ${payment.amount}",
+          "${payment.paymentType > 0 ? "+" : "-"} \$ ${payment.amount}",
           style: TextStyle(
               inherit: true, fontWeight: FontWeight.w700, fontSize: 16.0),
         ),
@@ -133,13 +143,13 @@ class _ProductsListWidgetState extends State<ProductsListWidget> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text(payment.date,
+              Text(payment.obfuscated,
                   style: TextStyle(
                       inherit: true, fontSize: 12.0, color: Colors.black45)),
               SizedBox(
                 width: 20,
               ),
-              Text(payment.hour,
+              Text(payment.type == 'creditcard' ? "" : payment.type,
                   style: TextStyle(
                       inherit: true, fontSize: 12.0, color: Colors.black45)),
               Spacer(),
@@ -148,5 +158,18 @@ class _ProductsListWidgetState extends State<ProductsListWidget> {
         ),
       ),
     );
+  }
+
+  void goToMovementsPage(int index) {
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => Movements(products[index])));
+  }
+
+  Color getBrandColor(String brand) {
+    if(brand.contains("Diners")){
+      return Color(0xFF000080);
+    } else {
+      return Color(0xFF000000);
+    }
   }
 }

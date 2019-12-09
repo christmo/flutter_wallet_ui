@@ -11,7 +11,7 @@
 
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="flutter_wallet_ui_challenge"
+        android:label="T-Transfiero"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
