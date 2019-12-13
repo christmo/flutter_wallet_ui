@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_wallet_ui_challenge/src/models/account.dart';
-import 'package:flutter_wallet_ui_challenge/src/models/card8a.dart';
-import 'package:flutter_wallet_ui_challenge/src/models/payment_model.dart';
 import 'package:flutter_wallet_ui_challenge/src/data/data.dart';
+import 'package:flutter_wallet_ui_challenge/src/models/payment_model.dart';
 import 'package:flutter_wallet_ui_challenge/src/pages/movements.dart';
 
 class ProductsListWidget extends StatefulWidget {
@@ -16,11 +14,12 @@ class ProductsListWidget extends StatefulWidget {
 
 class _ProductsListWidgetState extends State<ProductsListWidget> {
   List<ProductModel> products = List();
+  Future<List<ProductModel>> future;
 
   @override
   void initState() {
+    future = consolidation(widget.userId);
     super.initState();
-    loadData();
   }
 
   @override
@@ -35,45 +34,27 @@ class _ProductsListWidgetState extends State<ProductsListWidget> {
     super.dispose();
   }
 
-  void loadData() {
-    getAccount(widget.userId).then((listAcc) {
-      for (Account acc in listAcc) {
-        setState(() {
-          products.add(ProductModel(
-              Icons.monetization_on,
-              Color(0xFFffd60f),
-              acc.alias + " - " + acc.obfuscated,
-              acc.number,
-              acc.type,
-              double.parse(acc.available_balance),
-              1,
-              acc.alias,
-              acc.obfuscated,
-              ""));
-        });
-      }
-    });
-    queryCards(widget.userId).then((listCards) {
-      for (Card8A card in listCards) {
-        setState(() {
-          products.add(ProductModel(
-              Icons.credit_card,
-              getBrandColor(card.brand),
-              card.brand,
-              card.number,
-              "creditcard",
-              double.parse(card.available_quota),
-              1,
-              card.brand,
-              card.number.replaceAll("-", ""),
-              card.next_payment_day));
-        });
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder<List<ProductModel>>(
+      future: future,
+      builder: (BuildContext context, AsyncSnapshot snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.waiting:
+            return Text('Loading....');
+          default:
+            if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}');
+            } else {
+              products = snapshot?.data;
+              return listProducts(context);
+            }
+        }
+      },
+    );
+  }
+
+  Widget listProducts(BuildContext context) {
     Widget list = ListView.separated(
         physics: ClampingScrollPhysics(),
         shrinkWrap: true,
@@ -84,7 +65,7 @@ class _ProductsListWidgetState extends State<ProductsListWidget> {
           );
         },
         padding: EdgeInsets.zero,
-        itemCount: products.length,
+        itemCount: products?.length,
         itemBuilder: (BuildContext context, int index) {
           return GestureDetector(
               onTap: () {
@@ -162,13 +143,5 @@ class _ProductsListWidgetState extends State<ProductsListWidget> {
   void goToMovementsPage(int index) {
     Navigator.push(context,
         MaterialPageRoute(builder: (context) => Movements(products[index])));
-  }
-
-  Color getBrandColor(String brand) {
-    if(brand.contains("Diners")){
-      return Color(0xFF000080);
-    } else {
-      return Color(0xFF000000);
-    }
   }
 }

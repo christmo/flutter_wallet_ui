@@ -6,6 +6,7 @@ import 'package:flutter_wallet_ui_challenge/src/models/account.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/card_movements.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/customer.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/movement.dart';
+import 'package:flutter_wallet_ui_challenge/src/models/payment_model.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/user_model.dart';
 import 'package:http/http.dart' as http;
 
@@ -158,4 +159,43 @@ Future<CardMovements> getMovementsCards(String card, String brand) async {
   }
 
   return cardMovements;
+}
+
+Future<List<ProductModel>> consolidation(int userId) async {
+  List<ProductModel> products = List();
+  List<Account> accounts = await getAccount(userId);
+  List<Card8A> cards = await queryCards(userId);
+  List<ProductModel> productAccounts = accounts.map((Account acc) => ProductModel(
+      Icons.monetization_on,
+      Color(0xFFffd60f),
+      acc.alias + " - " + acc.obfuscated,
+      acc.number,
+      acc.type,
+      double.parse(acc.available_balance),
+      1,
+      acc.alias,
+      acc.obfuscated,
+      "")).toList();
+
+  List<ProductModel> productCards = cards.map((Card8A card) => ProductModel(
+      Icons.credit_card,
+      getBrandColor(card.brand),
+      card.brand,
+      card.number,
+      "creditcard",
+      double.parse(card.available_quota),
+      1,
+      card.brand,
+      card.number.replaceAll("-", ""),
+      card.next_payment_day)).toList();
+
+  return List.from(productCards)..addAll(productAccounts);
+}
+
+Color getBrandColor(String brand) {
+  if(brand.contains("Diners")){
+    return Color(0xFF000080);
+  } else {
+    return Color(0xFF000000);
+  }
 }
