@@ -1,22 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_wallet_ui_challenge/src/data/data.dart';
-import 'package:flutter_wallet_ui_challenge/src/models/account.dart';
-import 'package:flutter_wallet_ui_challenge/src/models/card8a.dart';
-import 'package:flutter_wallet_ui_challenge/src/models/customer.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/movement.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/payment_model.dart';
-import 'package:flutter_wallet_ui_challenge/src/models/transfer_account.dart';
-import 'package:flutter_wallet_ui_challenge/src/models/user_model.dart';
-import 'package:flutter_wallet_ui_challenge/src/utils/screen_size.dart';
-import 'package:flutter_wallet_ui_challenge/src/widgets/add_button.dart';
-import 'package:flutter_wallet_ui_challenge/src/widgets/user_card.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:modal_progress_hud/modal_progress_hud.dart';
-import 'dart:convert' as convert;
-import 'package:toast/toast.dart';
-
-import 'home_page.dart';
 
 class Movements extends StatefulWidget {
   final ProductModel product;
@@ -51,7 +37,7 @@ class MovementsState extends State<Movements> {
         });
       });
     } else {
-      getMovementsCards(widget.product.number).then((cardMovements) {
+      getMovementsCards(widget.product.number, widget.product.brand).then((cardMovements) {
         setState(() {
           cardMovements.movements = cardMovements.movements.reversed.toList();
           movements = cardMovements.movements;
@@ -120,14 +106,11 @@ class MovementsState extends State<Movements> {
           SizedBox(
             height: 15,
           ),
-          Center(
-              child: colorCard(
-            widget.product.type == 'savings' ? "Saldo" : "Por Pagar",
-            amount,
-            1,
-            context,
-            getBrandColor(widget.product.brand),
-          )),
+          Center(child: colorCard()),
+          SizedBox(
+            height: 15,
+          ),
+          perPayAndCourt(),
           SizedBox(
             height: 15,
           ),
@@ -167,8 +150,8 @@ class MovementsState extends State<Movements> {
             shape: CircleBorder(),
             shadowColor: movement.color.withOpacity(0.4),
             child: Container(
-              height: 50,
-              width: 50,
+              height: 30,
+              width: 30,
               decoration: BoxDecoration(
                 color: movement.color,
                 shape: BoxShape.circle,
@@ -218,65 +201,26 @@ class MovementsState extends State<Movements> {
     );
   }
 
-  Widget colorCard(
-      String text, double amount, int type, BuildContext context, Color color) {
-    final _media = MediaQuery.of(context).size;
+  Widget colorCard() {
+    Image image;
+    String type = widget.product.type;
+    if (type != 'creditcard') {
+      image = Image.asset('assets/images/cards/savings.jpg');
+    } else {
+      if (widget.product.isDiners) {
+        image = Image.asset('assets/images/cards/diners.png');
+      } else {
+        image = Image.asset('assets/images/cards/visa.png');
+      }
+    }
+
     return Container(
-      margin: EdgeInsets.only(top: 10, right: 10),
-      padding: EdgeInsets.all(10),
-      height: screenAwareSize(100, context),
-      width: _media.width / 1.8,
-      decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-                color: color.withOpacity(0.4),
-                blurRadius: 16,
-                spreadRadius: 0.2,
-                offset: Offset(0, 8)),
-          ]),
-      child: Stack(
-        children: <Widget>[
-          Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  text,
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(
-                  "${type > 0 ? "" : "-"} \$ ${amount.toString()}",
-                  style: TextStyle(
-                    fontSize: 22,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Visibility(
-                    visible: paymentDay.length > 0 ? true : false,
-                    child: Text(
-                      paymentDay.length > 0
-                          ? DateFormat.yMd()
-                              .format(DateFormat.yMd().parse(paymentDay))
-                          : "",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    )),
-              ]),
-          loadCardImage(
-              widget.product.isDiners, getLogo(widget.product.brand), 2)
-        ],
-      ),
-    );
+        height: 150,
+        width: 260,
+        child: ClipRRect(
+          borderRadius: new BorderRadius.circular(18.0),
+          child: image,
+        ));
   }
 
   Color getBrandColor(String brand) {
@@ -285,5 +229,63 @@ class MovementsState extends State<Movements> {
     } else {
       return Color(0xFF000000);
     }
+  }
+
+  Widget perPayAndCourt() {
+    return Padding(
+        padding: const EdgeInsets.only(
+            left: 80.0, right: 80.0, top: 8.0, bottom: 8.0),
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text(
+                      widget.product.type == 'savings' ? "Saldo" : "Por Pagar",
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Spacer(),
+                    Text(
+                      "${1 > 0 ? "" : "-"} \$ ${amount.toString()}",
+                      style: TextStyle(
+                        fontSize: 22,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ]),
+              Visibility(
+                  visible: paymentDay.length > 0 ? true : false,
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Text(
+                          'Día de Corte',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        Spacer(),
+                        Text(
+                          paymentDay.length > 0
+                              ? DateFormat.yMd()
+                                  .format(DateFormat.yMd().parse(paymentDay))
+                              : "",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.black,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ]))
+            ]));
   }
 }

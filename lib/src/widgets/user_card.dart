@@ -17,7 +17,7 @@ class UserCardWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(8.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.lightBlue.shade50,
+            color: Colors.grey.shade50,
             blurRadius: 8.0,
             spreadRadius: 4,
           ),
@@ -44,7 +44,7 @@ class UserCardWidget extends StatelessWidget {
                   inherit: true,
                   fontWeight: FontWeight.w500,
                   fontSize: 14.0,
-                  color: Colors.grey),
+                  color: Colors.black),
               overflow: TextOverflow.fade,
               textAlign: TextAlign.center,
             ),

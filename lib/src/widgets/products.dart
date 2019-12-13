@@ -4,7 +4,6 @@ import 'package:flutter_wallet_ui_challenge/src/models/card8a.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/payment_model.dart';
 import 'package:flutter_wallet_ui_challenge/src/data/data.dart';
 import 'package:flutter_wallet_ui_challenge/src/pages/movements.dart';
-import 'package:flutter_wallet_ui_challenge/src/widgets/payment_card.dart';
 
 class ProductsListWidget extends StatefulWidget {
   final int userId;
@@ -145,13 +144,13 @@ class _ProductsListWidgetState extends State<ProductsListWidget> {
             children: <Widget>[
               Text(payment.obfuscated,
                   style: TextStyle(
-                      inherit: true, fontSize: 12.0, color: Colors.black45)),
+                      inherit: true, fontSize: 12.0, color: Colors.black)),
               SizedBox(
                 width: 20,
               ),
               Text(payment.type == 'creditcard' ? "" : payment.type,
                   style: TextStyle(
-                      inherit: true, fontSize: 12.0, color: Colors.black45)),
+                      inherit: true, fontSize: 12.0, color: Colors.black)),
               Spacer(),
             ],
           ),

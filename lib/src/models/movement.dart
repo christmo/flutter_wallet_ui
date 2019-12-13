@@ -36,7 +36,7 @@ class Movement {
       description: json['description'] as String,
       transaction_id: json['transaction_id'] as String,
       type: json['type'] as String,
-      icon: json['type'] as String == 'CREDIT' ? Icons.keyboard_arrow_up: Icons.keyboard_arrow_down,
+      icon: json['type'] as String == 'CREDIT' ? Icons.add: Icons.keyboard_arrow_down,
       color: json['type'] as String == 'CREDIT' ? Color(0xFF389626) : Color(0xFFff2a12),
     );
   }

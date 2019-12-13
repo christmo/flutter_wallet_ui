@@ -11,79 +11,91 @@ class CreditCardDC extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _media = MediaQuery
-        .of(context)
-        .size;
-    return Material(
-      elevation: 1,
-      shadowColor: Colors.grey.shade300,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Stack(
-        children: <Widget>[
-          Container(
-            width: _media.width - 40,
-            padding: EdgeInsets.only(left: 30, right: 30, top: 30),
-            child: Column(
+    return Stack(children: <Widget>[
+      Container(
+          child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(
-                  "Card no.",
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(
-                  height: 15,
-                ),
-                Text(
-                  card.cardNo,
-                  style: Theme
-                      .of(context)
-                      .textTheme
-                      .headline
-                      .copyWith(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 20),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      "Expira",
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.grey.shade400,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    Text(card.expiryDate,
-                        style: Theme
-                            .of(context)
-                            .textTheme
-                            .headline
-                            .copyWith(
-                          color: Colors.black.withOpacity(0.5),
-                          fontWeight: FontWeight.bold,
-                        ))
-                  ],
-                )
-              ],
-            ),
-          ),
-          loadCardImage(card.type, card.logo, 15),
-        ],
-      ),
-    );
+            Center(child: loadCardsByType()),
+          ])),
+      Positioned(
+          top: 100,
+          right: 36,
+          child: Container(
+              padding: EdgeInsets.all(7),
+              child: Text(
+                card.cardNo,
+                style: getStyleCardNumber(context),
+              ))),
+      SizedBox(height: 20),
+      Positioned(
+          top: 130,
+          right: 130,
+          child: Container(
+              padding: EdgeInsets.all(7),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    card.expiryDate,
+                    style: getStyleCardNumber(context),
+                  )
+                ],
+              ))),
+    ]);
+  }
+
+  Widget loadCardsByType() {
+    Image image = Image.asset('assets/images/cards/visa.png');
+    bool isDiners = card.type;
+    if (isDiners) {
+      image = Image.asset('assets/images/cards/diners.png');
+    }
+
+    return Container(
+        child: ClipRRect(
+      borderRadius: new BorderRadius.circular(18.0),
+      child: image,
+    ));
+  }
+
+  Color getColorByProduct() {
+    if (card.type) {
+      return Color(0xFF095c80);
+    }
+    return Colors.grey.shade50;
+  }
+
+  TextStyle getStyleCardNumber(BuildContext context) {
+    List<Shadow> shadows = [];
+    if (card.type) {
+      shadows = [
+        Shadow(
+            // bottomLeft
+            offset: Offset(-1, -1),
+            color: Colors.white),
+        Shadow(
+            // bottomRight
+            offset: Offset(1, -1),
+            color: Colors.white),
+        Shadow(
+            // topRight
+            offset: Offset(1, 1),
+            color: Colors.white),
+        Shadow(
+            // topLeft
+            offset: Offset(-1, 1),
+            color: Colors.white),
+      ];
+      return Theme.of(context).textTheme.headline.copyWith(
+          color: getColorByProduct(),
+          fontWeight: FontWeight.bold,
+          shadows: shadows);
+    }
+    return Theme.of(context)
+        .textTheme
+        .headline
+        .copyWith(color: getColorByProduct(), fontWeight: FontWeight.bold);
   }
 }
 

@@ -1,22 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_wallet_ui_challenge/src/data/data.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/card8a.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/customer.dart';
 import 'package:flutter_wallet_ui_challenge/src/utils/screen_size.dart';
-import 'package:flutter_wallet_ui_challenge/src/widgets/add_button.dart';
-import 'package:flutter_wallet_ui_challenge/src/widgets/credit_card.dart';
 import 'package:flutter_wallet_ui_challenge/src/widgets/credit_card_dc.dart';
-import 'package:flutter_wallet_ui_challenge/src/widgets/payment_card.dart';
-import 'package:flutter_wallet_ui_challenge/src/widgets/user_card.dart';
-
-import 'overview_page.dart';
 
 Widget superior(
     Size media, BuildContext context, int userId, Customer customer) {
   return Container(
     color: Colors.grey.shade50,
-    height: media.height / 2,
+    height: media.height / 1.86,
     child: Stack(
       children: <Widget>[
         fondoSuperior(media),
@@ -57,12 +50,10 @@ class _ListCardsState extends State<ListCards> {
       alignment: Alignment.bottomCenter,
       child: Container(
         margin: EdgeInsets.only(
-          left: 20,
+          left: 15,
         ),
-        height: widget.media.longestSide <= 775
-            ? widget.media.height / 4
-            : widget.media.height / 4.3,
-        width: widget.media.width,
+        height: 220,
+        width: 330,
         child: NotificationListener<OverscrollIndicatorNotification>(
           onNotification: (overscroll) {
             overscroll.disallowGlow();
@@ -86,7 +77,7 @@ Widget fondoSuperior(Size media) {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage("assets/images/bg3.jpg"),
+                    image: AssetImage("assets/images/bg.jpg"),
                     fit: BoxFit.cover,
                   ),
                 ),
