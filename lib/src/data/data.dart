@@ -7,6 +7,7 @@ import 'package:flutter_wallet_ui_challenge/src/models/card_movements.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/customer.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/movement.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/payment_model.dart';
+import 'package:flutter_wallet_ui_challenge/src/models/transfer_account.dart';
 import 'package:flutter_wallet_ui_challenge/src/models/user_model.dart';
 import 'package:http/http.dart' as http;
 
@@ -34,7 +35,7 @@ String getLogo(String brand) {
 }
 
 Widget loadCardImage(bool isDiners, String logo, double position) {
-  if(isDiners){
+  if (isDiners) {
     return Positioned(
       top: position,
       right: position,
@@ -54,7 +55,7 @@ Widget loadCardImage(bool isDiners, String logo, double position) {
         color: Colors.pink,
         padding: EdgeInsets.all(7),
         child: Image.asset(logo, color: Colors.white),
-         /*Image.network(
+        /*Image.network(
             logo,
             width: 50,
             color: Colors.white,
@@ -128,8 +129,9 @@ Future<List<Customer>> getCustomers() async {
 Future<List<Movement>> getMovementsAccounts(String account) async {
   List<Movement> movements = new List();
   var client = new http.Client();
-  http.Response response = await client
-      .get('https://kvillacreses-eval-prod.apigee.net/pagos/movements?account='+account);
+  http.Response response = await client.get(
+      'https://kvillacreses-eval-prod.apigee.net/pagos/movements?account=' +
+          account);
   if (response.statusCode == 200) {
     Map<String, dynamic> body = convert.jsonDecode(response.body);
     List<dynamic> res = body['response']['message'];
@@ -145,13 +147,17 @@ Future<CardMovements> getMovementsCards(String card, String brand) async {
   CardMovements cardMovements = CardMovements();
   List<Movement> movements = List();
   var client = new http.Client();
-  http.Response response = await client
-      .get('https://kvillacreses-eval-prod.apigee.net/tarjetas/credit_cards/statement?number='+card+'&brand='+brand);
+  http.Response response = await client.get(
+      'https://kvillacreses-eval-prod.apigee.net/tarjetas/credit_cards/statement?number=' +
+          card +
+          '&brand=' +
+          brand);
   if (response.statusCode == 200) {
     Map<String, dynamic> body = convert.jsonDecode(response.body);
     List<dynamic> resMovements = body['response']['message']['movements'];
     Map<String, dynamic> res = body['response']['message'];
-    movements = resMovements.map((dynamic item) => Movement.fromJson(item)).toList();
+    movements =
+        resMovements.map((dynamic item) => Movement.fromJson(item)).toList();
     cardMovements = CardMovements.fromJson(res);
     cardMovements.movements = movements;
   } else {
@@ -162,40 +168,63 @@ Future<CardMovements> getMovementsCards(String card, String brand) async {
 }
 
 Future<List<ProductModel>> consolidation(int userId) async {
-  List<ProductModel> products = List();
   List<Account> accounts = await getAccount(userId);
   List<Card8A> cards = await queryCards(userId);
-  List<ProductModel> productAccounts = accounts.map((Account acc) => ProductModel(
-      Icons.monetization_on,
-      Color(0xFFffd60f),
-      acc.alias + " - " + acc.obfuscated,
-      acc.number,
-      acc.type,
-      double.parse(acc.available_balance),
-      1,
-      acc.alias,
-      acc.obfuscated,
-      "")).toList();
+  List<ProductModel> productAccounts = accounts
+      .map((Account acc) => ProductModel(
+          Icons.monetization_on,
+          Color(0xFFffd60f),
+          acc.alias + " - " + acc.obfuscated,
+          acc.number,
+          acc.type,
+          double.parse(acc.available_balance),
+          1,
+          acc.alias,
+          acc.obfuscated,
+          ""))
+      .toList();
 
-  List<ProductModel> productCards = cards.map((Card8A card) => ProductModel(
-      Icons.credit_card,
-      getBrandColor(card.brand),
-      card.brand,
-      card.number,
-      "creditcard",
-      double.parse(card.available_quota),
-      1,
-      card.brand,
-      card.number.replaceAll("-", ""),
-      card.next_payment_day)).toList();
+  List<ProductModel> productCards = cards
+      .map((Card8A card) => ProductModel(
+          Icons.credit_card,
+          getBrandColor(card.brand),
+          card.brand,
+          card.number,
+          "creditcard",
+          double.parse(card.available_quota),
+          1,
+          card.brand,
+          card.number.replaceAll("-", ""),
+          card.next_payment_day))
+      .toList();
 
   return List.from(productCards)..addAll(productAccounts);
 }
 
 Color getBrandColor(String brand) {
-  if(brand.contains("Diners")){
+  if (brand.contains("Diners")) {
     return Color(0xFF000080);
   } else {
     return Color(0xFF000000);
   }
+}
+
+Future<List<TransferAccount>> joinProductsTransfer(
+    int userId, bool removeLoan) async {
+  List<Account> accounts = await getAccount(userId);
+  List<TransferAccount> listAcc = accounts
+      .map((Account acc) =>
+          TransferAccount(number: acc.number, brand: acc.alias, type: acc.type))
+      .toList();
+  if(removeLoan) {
+    listAcc =
+        listAcc.where((TransferAccount acc) => acc.type != 'loan').toList();
+  }
+  List<Card8A> cards = await queryCards(userId);
+  List<TransferAccount> listCard = cards
+      .map((Card8A card) => TransferAccount(
+          number: card.number, brand: card.brand, type: "creditcard"))
+      .toList();
+
+  return listCard + listAcc;
 }

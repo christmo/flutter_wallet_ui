@@ -25,8 +25,8 @@ class Transfer extends StatefulWidget {
 
 class TransferState extends State<Transfer> {
   bool _saving = false;
-  List<TransferAccount> fromAccounts = List();
-  List<TransferAccount> toAccounts = List();
+  Future<List<TransferAccount>> fromAccFuture;
+  Future<List<TransferAccount>> toAccFuture;
   int selectedRadioFrom;
   int selectedRadioTo;
   TransferAccount selectedFromAccount;
@@ -38,57 +38,20 @@ class TransferState extends State<Transfer> {
 
   @override
   void initState() {
-    super.initState();
     selectedRadioFrom = 0;
     selectedRadioTo = 0;
-    selectedFromAccount = TransferAccount(number: "", brand: "");
-    selectedToAccount = TransferAccount(number: "", brand: "");
+    selectedFromAccount = TransferAccount(number: "", brand: "", type: "");
+    selectedToAccount = TransferAccount(number: "", brand: "", type: "");
     textDescriptionController.text = "";
-
-    getAccount(widget.userId).then((listAcc) {
-      for (Account acc in listAcc) {
-        setState(() {
-          fromAccounts
-              .add(TransferAccount(number: acc.number, brand: acc.alias));
-        });
-      }
-      print(fromAccounts);
-    });
-    queryCards(widget.userId).then((listCards) {
-      for (Card8A card in listCards) {
-        setState(() {
-          fromAccounts
-              .add(TransferAccount(number: card.number, brand: card.brand));
-        });
-      }
-      print(fromAccounts);
-    });
-
-    getAccount(widget.user.userId).then((listAcc) {
-      for (Account acc in listAcc) {
-        setState(() {
-          toAccounts.add(TransferAccount(number: acc.number, brand: acc.alias));
-        });
-      }
-      print(toAccounts);
-    });
-    queryCards(widget.user.userId).then((listCards) {
-      for (Card8A card in listCards) {
-        setState(() {
-          toAccounts
-              .add(TransferAccount(number: card.number, brand: card.brand));
-        });
-      }
-      print(toAccounts);
-    });
+    fromAccFuture = joinProductsTransfer(widget.userId, true);
+    toAccFuture = joinProductsTransfer(widget.user.userId, false);
+    super.initState();
   }
 
   @override
   void dispose() {
     textFieldController.dispose();
     textDescriptionController.dispose();
-    fromAccounts = List();
-    toAccounts = List();
     super.dispose();
   }
 
@@ -281,14 +244,34 @@ class TransferState extends State<Transfer> {
   }
 
   Widget listAccountsCards(int userId, bool from) {
-    List<Widget> widgetsToLoad = List();
-    if (from) {
-      widgetsToLoad = radioAccountsFrom(fromAccounts);
+    Future future;
+    if(from){
+      future = fromAccFuture;
     } else {
-      widgetsToLoad = radioAccountsTo(toAccounts);
+      future = toAccFuture;
     }
-    return Column(
-        mainAxisAlignment: MainAxisAlignment.start, children: widgetsToLoad);
+    return FutureBuilder<List<TransferAccount>>(
+      future: future,
+      builder: (BuildContext context, AsyncSnapshot snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.waiting:
+            return Text('Cargando....');
+          default:
+            if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}');
+            } else {
+              List<Widget> widgetsToLoad = List();
+              if (from) {
+                widgetsToLoad = radioAccountsFrom(snapshot?.data);
+              } else {
+                widgetsToLoad = radioAccountsTo(snapshot?.data);
+              }
+              return Column(
+                  mainAxisAlignment: MainAxisAlignment.start, children: widgetsToLoad);
+            }
+        }
+      },
+    );
   }
 
   List<Widget> radioAccountsFrom(List<TransferAccount> accounts) {

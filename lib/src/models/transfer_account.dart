@@ -4,8 +4,13 @@ class TransferAccount {
   final String number;
   final String brand;
   final String logo;
+  final String type;
 
-  TransferAccount({@required this.number, @required this.brand, this.logo});
+  TransferAccount(
+      {@required this.number,
+      @required this.brand,
+      this.logo,
+      @required this.type});
 
   factory TransferAccount.fromJson(Map<String, dynamic> json) {
     String brand = json['brand'] as String;
@@ -23,6 +28,7 @@ class TransferAccount {
       number: json['number'] as String,
       brand: brand,
       logo: logo,
+      type: json['type'] as String,
     );
   }
 }
