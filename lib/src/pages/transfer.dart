@@ -150,7 +150,7 @@ class TransferState extends State<Transfer> {
                   controller: textFieldController,
                   decoration: InputDecoration(
                       border: InputBorder.none,
-                      hintText: '\$',
+                      hintText: '0.0',
                       icon: Icon(Icons.attach_money)),
                   keyboardType: TextInputType.number,
                   style: TextStyle(
